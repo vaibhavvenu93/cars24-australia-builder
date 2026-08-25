@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from economics.unit_economics import calculate_unit_economics
 from engines.initiative_engine import rank_initiatives
 from engines.portfolio_engine import (
     calculate_portfolio_summary,
@@ -56,6 +57,31 @@ def build_briefing(
 
     top_initiative = initiatives[0]
 
+    # Calculate unique capital requiring attention.
+    #
+    # A vehicle may simultaneously:
+    # - be 90+ days old, and
+    # - have negative expected contribution.
+    #
+    # Adding those two portfolio metrics directly would therefore
+    # double-count some invested capital.
+    capital_at_risk = 0.0
+
+    for vehicle in vehicles:
+        economics = calculate_unit_economics(
+            vehicle
+        )
+
+        requires_attention = (
+            vehicle.inventory.days_in_inventory >= 90
+            or economics.expected_contribution < 0
+        )
+
+        if requires_attention:
+            capital_at_risk += (
+                economics.invested_capital
+            )
+
     priority_actions = []
 
     for opportunity in opportunities:
@@ -67,13 +93,17 @@ def build_briefing(
                     f"{opportunity.vehicle_id}"
                 ),
                 detail=opportunity.reason,
-                modeled_impact=opportunity.estimated_impact,
+                modeled_impact=(
+                    opportunity.estimated_impact
+                ),
                 confidence=opportunity.confidence,
             )
         )
 
     return BuilderBriefing(
-        vehicles_analysed=summary.vehicles_analysed,
+        vehicles_analysed=(
+            summary.vehicles_analysed
+        ),
 
         capital_deployed=(
             summary.total_invested_capital
@@ -83,9 +113,9 @@ def build_briefing(
             summary.expected_portfolio_contribution
         ),
 
-        capital_at_risk=(
-            summary.capital_in_90_plus_day_inventory
-            + summary.capital_in_negative_contribution_vehicles
+        capital_at_risk=round(
+            capital_at_risk,
+            2,
         ),
 
         critical_interventions=(
@@ -96,7 +126,9 @@ def build_briefing(
             summary.high_opportunities
         ),
 
-        top_initiative=top_initiative.name,
+        top_initiative=(
+            top_initiative.name
+        ),
 
         top_initiative_reason=(
             f"{top_initiative.description} "
