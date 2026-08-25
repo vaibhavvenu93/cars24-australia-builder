@@ -33,11 +33,37 @@ def _priority_score(
     implementation_risk: float,
     time_to_impact_days: int,
 ) -> float:
+    """
+    Rank initiatives using non-equivalent business outcomes
+    without treating every metric as additive profit.
 
-    value_score = (
-        contribution_impact
-        + capital_released * 0.5
-        + risk_reduction * 0.75
+    Contribution is the primary economic outcome.
+
+    Capital release receives a smaller liquidity weighting.
+
+    Risk reduction is treated as strategic protection rather
+    than being counted again as full contribution.
+    """
+
+    economic_value = max(
+        contribution_impact,
+        0,
+    )
+
+    liquidity_value = max(
+        capital_released,
+        0,
+    ) * 0.20
+
+    protection_value = max(
+        risk_reduction,
+        0,
+    ) * 0.20
+
+    total_value = (
+        economic_value
+        + liquidity_value
+        + protection_value
     )
 
     execution_penalty = (
@@ -46,7 +72,7 @@ def _priority_score(
         * max(time_to_impact_days, 1)
     )
 
-    return value_score / execution_penalty
+    return total_value / execution_penalty
 
 
 def _build_initiative(
