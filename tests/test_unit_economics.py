@@ -189,4 +189,3 @@ def test_lower_acquisition_price_improves_contribution():
         >
         expensive.expected_contribution
     )
- 
