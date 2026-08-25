@@ -4,6 +4,7 @@ from collections import Counter
 from dataclasses import dataclass
 
 from economics.unit_economics import calculate_unit_economics
+from engines.location_engine import recommend_transfer
 from engines.opportunity_engine import (
     ActionType,
     Opportunity,
