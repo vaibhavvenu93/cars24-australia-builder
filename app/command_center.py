@@ -28,14 +28,27 @@ DATA_PATH = ROOT / "data" / "synthetic_vehicle_portfolio.json"
 
 
 def load_portfolio() -> list[Vehicle]:
-    payload = json.loads(
-        DATA_PATH.read_text()
-    )
+    """
+    Load the generated synthetic portfolio when available.
 
-    return [
-        Vehicle.model_validate(item)
-        for item in payload
-    ]
+    On clean deployment environments such as Streamlit Cloud,
+    generate the deterministic synthetic portfolio at runtime
+    instead of depending on a locally generated JSON artifact.
+    """
+
+    if DATA_PATH.exists():
+        payload = json.loads(
+            DATA_PATH.read_text()
+        )
+
+        return [
+            Vehicle.model_validate(item)
+            for item in payload
+        ]
+
+    from data.generate_portfolio import generate_portfolio
+
+    return generate_portfolio()
 
 
 def money(value: float) -> str:
@@ -206,7 +219,6 @@ with tab1:
     st.subheader("Top 5 Actions Today")
 
     for action in briefing.priority_actions:
-
         st.markdown(
             f"""
             <div class="action-card">
@@ -336,7 +348,6 @@ with tab2:
     st.markdown("### Recommended Actions")
 
     for opportunity in opportunities:
-
         st.info(
             f"**{opportunity.action.value} "
             f"— {opportunity.priority.value}**\n\n"
@@ -454,7 +465,7 @@ with tab3:
             scenario.scenario_capital
         ),
         delta=(
-            f"-{money(scenario.capital_released)}"
+            f"{money(scenario.capital_released)} released"
         ),
         delta_color="inverse",
     )
@@ -465,7 +476,7 @@ with tab3:
             scenario.scenario_risk_cost
         ),
         delta=(
-            f"-{money(scenario.risk_cost_reduction)}"
+            f"{money(scenario.risk_cost_reduction)} reduced"
         ),
         delta_color="inverse",
     )
