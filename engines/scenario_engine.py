@@ -159,9 +159,7 @@ def apply_scenario(
                     recommendation.recommended_location
                 )
 
-                vehicle.acquisition.transport_to_hub_cost += (
-                    recommendation.estimated_transfer_cost
-                )
+        
 
                 vehicle.demand.estimated_days_to_sale = max(
                     1,
