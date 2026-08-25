@@ -1,3 +1,4 @@
+from engines.location_engine import recommend_transfer
 from __future__ import annotations
 
 from collections import Counter
@@ -136,9 +137,35 @@ def rank_opportunities(
     all_opportunities: list[Opportunity] = []
 
     for vehicle in vehicles:
-        all_opportunities.extend(
-            evaluate_vehicle(vehicle)
-        )
+        vehicle_opportunities = evaluate_vehicle(vehicle)
+
+        for opportunity in vehicle_opportunities:
+            if opportunity.action == ActionType.TRANSFER_REVIEW:
+                transfer = recommend_transfer(vehicle)
+
+                if transfer is not None:
+                    opportunity = Opportunity(
+                        vehicle_id=opportunity.vehicle_id,
+                        action=ActionType.TRANSFER_REVIEW,
+                        priority=opportunity.priority,
+                        reason=(
+                            f"Move from "
+                            f"{transfer.current_location.value} "
+                            f"to "
+                            f"{transfer.recommended_location.value}. "
+                            f"Estimated {transfer.estimated_days_saved} "
+                            f"days saved with "
+                            f"{transfer.estimated_net_impact:,.0f} "
+                            f"of modeled net impact."
+                        ),
+                        estimated_impact=round(
+                            transfer.estimated_net_impact,
+                            2,
+                        ),
+                        confidence=transfer.confidence,
+                    )
+
+            all_opportunities.append(opportunity)
 
     meaningful = [
         opportunity
@@ -174,7 +201,6 @@ def rank_opportunities(
         )
 
     return ranked
-
 
 def action_breakdown(
     vehicles: list[Vehicle],
