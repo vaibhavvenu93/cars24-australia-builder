@@ -27,6 +27,12 @@ from app.views.inventory import (
     render_portfolio,
     render_vehicle_360,
 )
+from app.views.operations import (
+    render_action_centre,
+    render_location_performance,
+    render_transfer_intelligence,
+    render_vendor_intelligence,
+)
 from data.integrations import (
     get_integration_sources,
     get_intelligence_coverage,
@@ -874,6 +880,31 @@ elif page == "Capital Intelligence":
 
 
 # ==========================================================
+# OPERATIONS
+# ==========================================================
+
+
+elif page == "Location Performance":
+
+    render_location_performance()
+
+
+elif page == "Vendor Intelligence":
+
+    render_vendor_intelligence()
+
+
+elif page == "Transfer Intelligence":
+
+    render_transfer_intelligence()
+
+
+elif page == "Action Centre":
+
+    render_action_centre()
+
+
+# ==========================================================
 # DATA HUB
 # ==========================================================
 
@@ -1469,26 +1500,13 @@ elif page == "Integrations":
 
 
 # ==========================================================
-# REMAINING OPERATIONS / BUILDER PLACEHOLDERS
+# BUILDER PLACEHOLDERS
 # ==========================================================
 
 
 else:
 
     environment_copy = {
-        "Location Performance": (
-            "Compare economics, velocity and conversion "
-            "across Australian locations."
-        ),
-        "Vendor Intelligence": (
-            "Expose true vendor economics beyond invoice cost."
-        ),
-        "Transfer Intelligence": (
-            "Match ageing inventory to stronger regional demand."
-        ),
-        "Action Centre": (
-            "Turn system intelligence into owned operating decisions."
-        ),
         "Opportunity Radar": (
             "Rank cross-functional opportunities by economic impact."
         ),
@@ -1527,18 +1545,20 @@ else:
 - Portfolio Intelligence ✓
 - Vehicle 360 ✓
 - Capital Intelligence ✓
+- Location Performance ✓
+- Vendor Intelligence ✓
+- Transfer Intelligence ✓
+- Action Centre ✓
 - Adaptive Data Hub ✓
 - Integration Registry ✓
 - 35 automated tests ✓
 
 **Next**
-- location operations
-- recon/vendor economics
-- transfer engine UI
-- unified Action Centre
-- opportunity radar
-- experiments
-- scenario simulation
+- Opportunity Radar
+- Scenario Lab
+- Experiments
+- final product polish
+- deployment
         """
     )
 
