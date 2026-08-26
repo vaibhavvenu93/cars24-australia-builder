@@ -17,6 +17,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 
+# ==========================================================
+# VIEW IMPORTS
+# ==========================================================
+
+from app.views.builder import (
+    render_experiments,
+    render_opportunity_radar,
+    render_scenario_lab,
+)
 from app.views.growth import (
     render_funnel_analytics,
     render_growth_intelligence,
@@ -33,6 +42,7 @@ from app.views.operations import (
     render_transfer_intelligence,
     render_vendor_intelligence,
 )
+
 from data.integrations import (
     get_integration_sources,
     get_intelligence_coverage,
@@ -311,7 +321,9 @@ def pretty_enum(value: str) -> str:
 def capability_name(
     capability: IntelligenceCapability,
 ) -> str:
-    return pretty_enum(capability.value)
+    return pretty_enum(
+        capability.value
+    )
 
 
 def status_text(
@@ -358,14 +370,19 @@ def read_uploaded_dataset(
     name = uploaded_file.name.lower()
 
     if name.endswith(".csv"):
-        return pd.read_csv(uploaded_file)
+        return pd.read_csv(
+            uploaded_file
+        )
 
     if (
         name.endswith(".xlsx")
         or name.endswith(".xls")
     ):
+
         try:
-            return pd.read_excel(uploaded_file)
+            return pd.read_excel(
+                uploaded_file
+            )
 
         except ImportError:
             raise RuntimeError(
@@ -382,16 +399,18 @@ def read_uploaded_dataset(
 # INTELLIGENCE STATE
 # ==========================================================
 
+integration_sources = (
+    get_integration_sources()
+)
 
-integration_sources = get_integration_sources()
-
-coverage = get_intelligence_coverage()
+coverage = (
+    get_intelligence_coverage()
+)
 
 
 # ==========================================================
 # SIDEBAR
 # ==========================================================
-
 
 with st.sidebar:
 
@@ -465,7 +484,9 @@ with st.sidebar:
     st.write("")
     st.write("")
 
-    st.caption("SYSTEM")
+    st.caption(
+        "SYSTEM"
+    )
 
     st.markdown(
         """
@@ -509,9 +530,8 @@ with st.sidebar:
 
 
 # ==========================================================
-# EXECUTIVE
+# EXECUTIVE — COMMAND CENTRE
 # ==========================================================
-
 
 if page == "Command Centre":
 
@@ -524,8 +544,10 @@ if page == "Command Centre":
         ),
     )
 
-    top_left, top_right = st.columns(
-        [4, 1]
+    top_left, top_right = (
+        st.columns(
+            [4, 1]
+        )
     )
 
     with top_left:
@@ -553,7 +575,9 @@ if page == "Command Centre":
 
     st.write("")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5 = (
+        st.columns(5)
+    )
 
     c1.metric(
         "Revenue",
@@ -619,7 +643,9 @@ if page == "Command Centre":
                 "than immediate markdown."
             )
 
-            a1, a2 = st.columns(2)
+            a1, a2 = st.columns(
+                2
+            )
 
             a1.button(
                 "Investigate",
@@ -654,7 +680,9 @@ if page == "Command Centre":
                 "against current regional demand."
             )
 
-            m1, m2 = st.columns(2)
+            m1, m2 = st.columns(
+                2
+            )
 
             m1.button(
                 "View market evidence",
@@ -711,7 +739,8 @@ if page == "Command Centre":
             )
 
             st.progress(
-                coverage.overall_score / 100
+                coverage.overall_score
+                / 100
             )
 
             st.divider()
@@ -721,11 +750,13 @@ if page == "Command Centre":
             )
 
             st.write(
-                coverage.recommended_next_connection
+                coverage
+                .recommended_next_connection
             )
 
             st.caption(
-                coverage.recommendation_reason
+                coverage
+                .recommendation_reason
             )
 
         with st.container(
@@ -753,6 +784,10 @@ if page == "Command Centre":
                 "⚪ 5 being monitored"
             )
 
+
+# ==========================================================
+# EXECUTIVE — MORNING BRIEF
+# ==========================================================
 
 elif page == "Morning Brief":
 
@@ -819,6 +854,7 @@ elif page == "Morning Brief":
             )
 
             with c1:
+
                 st.caption(
                     category.upper()
                 )
@@ -843,7 +879,6 @@ elif page == "Morning Brief":
 # GROWTH
 # ==========================================================
 
-
 elif page == "Growth Intelligence":
 
     render_growth_intelligence()
@@ -863,7 +898,6 @@ elif page == "Market Intelligence":
 # INVENTORY
 # ==========================================================
 
-
 elif page == "Portfolio":
 
     render_portfolio()
@@ -882,7 +916,6 @@ elif page == "Capital Intelligence":
 # ==========================================================
 # OPERATIONS
 # ==========================================================
-
 
 elif page == "Location Performance":
 
@@ -905,9 +938,27 @@ elif page == "Action Centre":
 
 
 # ==========================================================
-# DATA HUB
+# BUILDER
 # ==========================================================
 
+elif page == "Opportunity Radar":
+
+    render_opportunity_radar()
+
+
+elif page == "Scenario Lab":
+
+    render_scenario_lab()
+
+
+elif page == "Experiments":
+
+    render_experiments()
+
+
+# ==========================================================
+# DATA HUB
+# ==========================================================
 
 elif page == "Data Hub":
 
@@ -934,13 +985,15 @@ elif page == "Data Hub":
 
     with upload_col:
 
-        uploaded_file = st.file_uploader(
-            "Upload operational dataset",
-            type=[
-                "csv",
-                "xlsx",
-                "xls",
-            ],
+        uploaded_file = (
+            st.file_uploader(
+                "Upload operational dataset",
+                type=[
+                    "csv",
+                    "xlsx",
+                    "xls",
+                ],
+            )
         )
 
     with help_col:
@@ -953,7 +1006,9 @@ elif page == "Data Hub":
                 "**Supported operational domains**"
             )
 
-            for category in IntegrationCategory:
+            for category in (
+                IntegrationCategory
+            ):
 
                 st.write(
                     "• "
@@ -970,7 +1025,9 @@ elif page == "Data Hub":
             "How Data Hub works"
         )
 
-        h1, h2, h3, h4 = st.columns(4)
+        h1, h2, h3, h4 = (
+            st.columns(4)
+        )
 
         cards = [
             (
@@ -999,7 +1056,12 @@ elif page == "Data Hub":
             ),
         ]
 
-        for column, number, title, copy in cards:
+        for (
+            column,
+            number,
+            title,
+            copy,
+        ) in cards:
 
             with column:
 
@@ -1015,7 +1077,9 @@ elif page == "Data Hub":
                         f"**{title}**"
                     )
 
-                    st.caption(copy)
+                    st.caption(
+                        copy
+                    )
 
         st.divider()
 
@@ -1023,7 +1087,10 @@ elif page == "Data Hub":
             "Current Data Coverage"
         )
 
-        for category, score in (
+        for (
+            category,
+            score,
+        ) in (
             coverage
             .category_scores
             .items()
@@ -1077,7 +1144,9 @@ elif page == "Data Hub":
                 )
             )
 
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3, c4 = (
+                st.columns(4)
+            )
 
             c1.metric(
                 "Rows",
@@ -1086,13 +1155,16 @@ elif page == "Data Hub":
 
             c2.metric(
                 "Source Columns",
-                len(dataframe.columns),
+                len(
+                    dataframe.columns
+                ),
             )
 
             c3.metric(
                 "Mapped Fields",
                 len(
-                    detection.matched_fields
+                    detection
+                    .matched_fields
                 ),
             )
 
@@ -1115,7 +1187,9 @@ elif page == "Data Hub":
 
                 mapping_rows = []
 
-                for source_column in dataframe.columns:
+                for source_column in (
+                    dataframe.columns
+                ):
 
                     canonical = (
                         detection
@@ -1127,7 +1201,9 @@ elif page == "Data Hub":
 
                     mapping_rows.append(
                         {
-                            "Source column": source_column,
+                            "Source column": (
+                                source_column
+                            ),
                             "Canonical field": (
                                 canonical
                                 if canonical
@@ -1205,7 +1281,10 @@ elif page == "Data Hub":
                         "MISSING CANONICAL FIELDS"
                     )
 
-                    if detection.missing_fields:
+                    if (
+                        detection
+                        .missing_fields
+                    ):
 
                         for field in (
                             detection
@@ -1232,7 +1311,9 @@ elif page == "Data Hub":
             )
 
             st.dataframe(
-                dataframe.head(25),
+                dataframe.head(
+                    25
+                ),
                 use_container_width=True,
             )
 
@@ -1242,10 +1323,12 @@ elif page == "Data Hub":
 
             with c1:
 
-                import_clicked = st.button(
-                    "Import & Recalculate",
-                    type="primary",
-                    use_container_width=True,
+                import_clicked = (
+                    st.button(
+                        "Import & Recalculate",
+                        type="primary",
+                        use_container_width=True,
+                    )
                 )
 
             with c2:
@@ -1269,14 +1352,14 @@ elif page == "Data Hub":
         except Exception as exc:
 
             st.error(
-                f"Unable to process dataset: {exc}"
+                "Unable to process dataset: "
+                f"{exc}"
             )
 
 
 # ==========================================================
 # INTEGRATIONS
 # ==========================================================
-
 
 elif page == "Integrations":
 
@@ -1289,11 +1372,14 @@ elif page == "Integrations":
         ),
     )
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3 = (
+        st.columns(3)
+    )
 
     active_count = sum(
         1
-        for source in integration_sources
+        for source
+        in integration_sources
         if source.status
         in {
             IntegrationStatus.CONNECTED,
@@ -1321,22 +1407,30 @@ elif page == "Integrations":
 
     st.write("")
 
-    filter_option = st.selectbox(
-        "Show systems",
-        [
-            "All",
-            "Active / Simulated",
-            "Not Connected",
-        ],
+    filter_option = (
+        st.selectbox(
+            "Show systems",
+            [
+                "All",
+                "Active / Simulated",
+                "Not Connected",
+            ],
+        )
     )
 
-    visible_sources = integration_sources
+    visible_sources = (
+        integration_sources
+    )
 
-    if filter_option == "Active / Simulated":
+    if (
+        filter_option
+        == "Active / Simulated"
+    ):
 
         visible_sources = [
             source
-            for source in integration_sources
+            for source
+            in integration_sources
             if source.status
             in {
                 IntegrationStatus.CONNECTED,
@@ -1344,11 +1438,15 @@ elif page == "Integrations":
             }
         ]
 
-    elif filter_option == "Not Connected":
+    elif (
+        filter_option
+        == "Not Connected"
+    ):
 
         visible_sources = [
             source
-            for source in integration_sources
+            for source
+            in integration_sources
             if source.status
             in {
                 IntegrationStatus.READY,
@@ -1356,14 +1454,18 @@ elif page == "Integrations":
             }
         ]
 
-    for source in visible_sources:
+    for source in (
+        visible_sources
+    ):
 
         with st.container(
             border=True
         ):
 
-            top1, top2, top3 = st.columns(
-                [3, 1, 1]
+            top1, top2, top3 = (
+                st.columns(
+                    [3, 1, 1]
+                )
             )
 
             with top1:
@@ -1403,18 +1505,23 @@ elif page == "Integrations":
                 source.description
             )
 
-            if source.capabilities:
+            if (
+                source.capabilities
+            ):
 
                 st.markdown(
                     "**Intelligence enabled**"
                 )
 
-                capability_cols = st.columns(
-                    min(
-                        len(
-                            source.capabilities
-                        ),
-                        4,
+                capability_cols = (
+                    st.columns(
+                        min(
+                            len(
+                                source
+                                .capabilities
+                            ),
+                            4,
+                        )
                     )
                 )
 
@@ -1500,73 +1607,28 @@ elif page == "Integrations":
 
 
 # ==========================================================
-# BUILDER PLACEHOLDERS
+# SAFETY FALLBACK
 # ==========================================================
-
 
 else:
 
-    environment_copy = {
-        "Opportunity Radar": (
-            "Rank cross-functional opportunities by economic impact."
-        ),
-        "Scenario Lab": (
-            "Change assumptions and watch the operating model recalculate."
-        ),
-        "Experiments": (
-            "Turn hypotheses into measurable interventions."
-        ),
-    }
-
     render_page_header(
-        environment,
-        page,
-        environment_copy.get(
-            page,
-            "CARS24 Australia operating intelligence.",
+        "CARS24 Intelligence OS",
+        "Environment unavailable",
+        (
+            "This navigation route has not been configured "
+            "correctly."
         ),
     )
 
-    st.info(
-        "Environment shell is live. "
-        "This layer is next in the build sequence."
-    )
-
-    st.markdown(
-        """
-### Intelligence OS build state
-
-**Live**
-- Executive Command ✓
-- Morning Brief ✓
-- Growth Intelligence ✓
-- Funnel Analytics ✓
-- Market Intelligence ✓
-- Portfolio Intelligence ✓
-- Vehicle 360 ✓
-- Capital Intelligence ✓
-- Location Performance ✓
-- Vendor Intelligence ✓
-- Transfer Intelligence ✓
-- Action Centre ✓
-- Adaptive Data Hub ✓
-- Integration Registry ✓
-- 35 automated tests ✓
-
-**Next**
-- Opportunity Radar
-- Scenario Lab
-- Experiments
-- final product polish
-- deployment
-        """
+    st.warning(
+        "Please select another operating environment."
     )
 
 
 # ==========================================================
 # FOOTER
 # ==========================================================
-
 
 st.write("")
 st.write("")
