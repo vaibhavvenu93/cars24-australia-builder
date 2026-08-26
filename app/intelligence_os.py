@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 import streamlit as st
@@ -18,12 +17,16 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 
+from app.views.growth import (
+    render_funnel_analytics,
+    render_growth_intelligence,
+    render_market_intelligence,
+)
 from data.integrations import (
     get_integration_sources,
     get_intelligence_coverage,
 )
 from engines.data_hub import (
-    DatasetDetection,
     describe_detection,
     detect_dataset,
 )
@@ -113,6 +116,12 @@ div[role="radiogroup"] > label {
 section[data-testid="stSidebar"]
 div[role="radiogroup"] > label:hover {
     background: #17191F;
+}
+
+/* Force select text to remain visible */
+section[data-testid="stSidebar"]
+div[data-baseweb="select"] * {
+    color: #17191E !important;
 }
 
 
@@ -253,6 +262,21 @@ div[data-testid="stFileUploader"] {
     margin-bottom: 4px;
 }
 
+.brand-mark {
+    font-size: 1.28rem;
+    font-weight: 850;
+    letter-spacing: -0.04em;
+    color: #FFFFFF;
+    margin-bottom: 2px;
+}
+
+.brand-sub {
+    font-size: 0.67rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #92969F;
+}
+
 .os-badge {
     display: inline-block;
     font-size: 0.68rem;
@@ -333,12 +357,33 @@ div[data-testid="stFileUploader"] {
 # HELPERS
 # ==========================================================
 
+
 def pretty_enum(value: str) -> str:
     return value.replace("_", " ").title()
 
 
-def money(value: float) -> str:
-    return f"${value:,.0f}"
+def capability_name(
+    capability: IntelligenceCapability,
+) -> str:
+    return pretty_enum(
+        capability.value
+    )
+
+
+def status_text(
+    status: IntegrationStatus,
+) -> str:
+
+    if status == IntegrationStatus.CONNECTED:
+        return "● CONNECTED"
+
+    if status == IntegrationStatus.SIMULATED:
+        return "● SIMULATED"
+
+    if status == IntegrationStatus.READY:
+        return "○ READY"
+
+    return "○ NOT CONNECTED"
 
 
 def render_page_header(
@@ -346,6 +391,7 @@ def render_page_header(
     title: str,
     description: str,
 ) -> None:
+
     st.markdown(
         f'<div class="eyebrow">{eyebrow}</div>',
         unsafe_allow_html=True,
@@ -361,36 +407,26 @@ def render_page_header(
     st.write("")
 
 
-def capability_name(
-    capability: IntelligenceCapability,
-) -> str:
-    return pretty_enum(capability.value)
+def read_uploaded_dataset(
+    uploaded_file,
+) -> pd.DataFrame:
 
-
-def status_text(
-    status: IntegrationStatus,
-) -> str:
-    if status == IntegrationStatus.CONNECTED:
-        return "● CONNECTED"
-
-    if status == IntegrationStatus.SIMULATED:
-        return "● SIMULATED"
-
-    if status == IntegrationStatus.READY:
-        return "○ READY"
-
-    return "○ NOT CONNECTED"
-
-
-def read_uploaded_dataset(uploaded_file):
     name = uploaded_file.name.lower()
 
     if name.endswith(".csv"):
-        return pd.read_csv(uploaded_file)
+        return pd.read_csv(
+            uploaded_file
+        )
 
-    if name.endswith(".xlsx") or name.endswith(".xls"):
+    if (
+        name.endswith(".xlsx")
+        or name.endswith(".xls")
+    ):
         try:
-            return pd.read_excel(uploaded_file)
+            return pd.read_excel(
+                uploaded_file
+            )
+
         except ImportError:
             raise RuntimeError(
                 "Excel support requires openpyxl. "
@@ -403,25 +439,39 @@ def read_uploaded_dataset(uploaded_file):
 
 
 # ==========================================================
-# LOAD INTEGRATION INTELLIGENCE
+# INTELLIGENCE STATE
 # ==========================================================
 
-integration_sources = get_integration_sources()
-coverage = get_intelligence_coverage()
+
+integration_sources = (
+    get_integration_sources()
+)
+
+coverage = (
+    get_intelligence_coverage()
+)
 
 
 # ==========================================================
 # SIDEBAR
 # ==========================================================
 
+
 with st.sidebar:
 
-    st.markdown("## CARS24")
-
-    st.caption(
-        "AUSTRALIA // INTELLIGENCE OS"
+    st.markdown(
+        """
+        <div class="brand-mark">
+            ⚡ CARS24
+        </div>
+        <div class="brand-sub">
+            Australia Intelligence OS
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
+    st.write("")
     st.write("")
 
     environment = st.selectbox(
@@ -478,7 +528,9 @@ with st.sidebar:
     st.write("")
     st.write("")
 
-    st.caption("SYSTEM")
+    st.caption(
+        "SYSTEM"
+    )
 
     st.markdown(
         """
@@ -509,7 +561,8 @@ with st.sidebar:
     )
 
     st.caption(
-        f"{len(coverage.unlocked_capabilities)} capabilities unlocked"
+        f"{len(coverage.unlocked_capabilities)} "
+        "capabilities unlocked"
     )
 
     st.write("")
@@ -521,8 +574,9 @@ with st.sidebar:
 
 
 # ==========================================================
-# COMMAND CENTRE
+# EXECUTIVE — COMMAND CENTRE
 # ==========================================================
+
 
 if page == "Command Centre":
 
@@ -530,9 +584,10 @@ if page == "Command Centre":
         "Executive Command",
         "Good morning. Here's what changed.",
         (
-            "One operating view across growth, inventory, capital "
-            "and execution. Synthetic data demonstrates how the "
-            "system would behave against connected CARS24 systems."
+            "One operating view across growth, inventory, "
+            "capital and execution. Synthetic data demonstrates "
+            "how the system would behave against connected "
+            "CARS24 systems."
         ),
     )
 
@@ -541,6 +596,7 @@ if page == "Command Centre":
     )
 
     with top_left:
+
         st.markdown(
             """
             <div class="hero-strip">
@@ -555,6 +611,7 @@ if page == "Command Centre":
         )
 
     with top_right:
+
         st.button(
             "↻ Refresh Intelligence",
             type="primary",
@@ -563,7 +620,9 @@ if page == "Command Centre":
 
     st.write("")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4, c5 = st.columns(
+        5
+    )
 
     c1.metric(
         "Revenue",
@@ -608,9 +667,14 @@ if page == "Command Centre":
             "Today's Intelligence"
         )
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
-                '<div class="priority-red">P0 · CAPITAL</div>',
+                '<div class="priority-red">'
+                'P0 · CAPITAL'
+                '</div>',
                 unsafe_allow_html=True,
             )
 
@@ -624,7 +688,9 @@ if page == "Command Centre":
                 "than immediate markdown."
             )
 
-            a1, a2 = st.columns(2)
+            a1, a2 = st.columns(
+                2
+            )
 
             a1.button(
                 "Investigate",
@@ -638,9 +704,14 @@ if page == "Command Centre":
                 use_container_width=True,
             )
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
-                '<div class="priority-amber">P1 · MARKET</div>',
+                '<div class="priority-amber">'
+                'P1 · MARKET'
+                '</div>',
                 unsafe_allow_html=True,
             )
 
@@ -649,12 +720,14 @@ if page == "Command Centre":
             )
 
             st.write(
-                "The system identified seven Melbourne SUVs whose "
-                "transfer economics appear favourable against current "
-                "regional demand."
+                "The system identified seven Melbourne SUVs "
+                "whose transfer economics appear favourable "
+                "against current regional demand."
             )
 
-            m1, m2 = st.columns(2)
+            m1, m2 = st.columns(
+                2
+            )
 
             m1.button(
                 "View market evidence",
@@ -668,9 +741,14 @@ if page == "Command Centre":
                 use_container_width=True,
             )
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
-                '<div class="priority-green">P2 · GROWTH</div>',
+                '<div class="priority-green">'
+                'P2 · GROWTH'
+                '</div>',
                 unsafe_allow_html=True,
             )
 
@@ -679,8 +757,9 @@ if page == "Command Centre":
             )
 
             st.write(
-                "Brisbane demand is high, local supply is constrained "
-                "and historical unit economics remain attractive."
+                "Brisbane demand is high, local supply is "
+                "constrained and historical unit economics "
+                "remain attractive."
             )
 
             st.button(
@@ -695,7 +774,10 @@ if page == "Command Centre":
             "Business Pulse"
         )
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.metric(
                 "Intelligence Coverage",
                 f"{coverage.overall_score:.0f}%",
@@ -707,7 +789,8 @@ if page == "Command Centre":
             )
 
             st.progress(
-                coverage.overall_score / 100
+                coverage.overall_score
+                / 100
             )
 
             st.divider()
@@ -724,7 +807,10 @@ if page == "Command Centre":
                 coverage.recommendation_reason
             )
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
                 "**Decision queue**"
             )
@@ -734,11 +820,22 @@ if page == "Command Centre":
                 "14",
             )
 
-            st.write("🔴 3 require executive review")
-            st.write("🟠 6 require operator review")
-            st.write("⚪ 5 being monitored")
+            st.write(
+                "🔴 3 require executive review"
+            )
 
-        with st.container(border=True):
+            st.write(
+                "🟠 6 require operator review"
+            )
+
+            st.write(
+                "⚪ 5 being monitored"
+            )
+
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
                 "**Experiments**"
             )
@@ -758,40 +855,39 @@ if page == "Command Centre":
         "Performance by operating lens"
     )
 
-    p1, p2, p3, p4 = st.columns(4)
+    p1, p2, p3, p4 = st.columns(
+        4
+    )
 
-    with p1:
-        st.metric(
-            "Growth",
-            "+8.2%",
-            "Revenue",
-        )
+    p1.metric(
+        "Growth",
+        "+8.2%",
+        "Revenue",
+    )
 
-    with p2:
-        st.metric(
-            "Inventory",
-            "6.4x",
-            "Turns",
-        )
+    p2.metric(
+        "Inventory",
+        "6.4x",
+        "Turns",
+    )
 
-    with p3:
-        st.metric(
-            "Operations",
-            "3.8 days",
-            "Median recon",
-        )
+    p3.metric(
+        "Operations",
+        "3.8 days",
+        "Median recon",
+    )
 
-    with p4:
-        st.metric(
-            "Builder",
-            "$418K",
-            "Identified opportunity",
-        )
+    p4.metric(
+        "Builder",
+        "$418K",
+        "Identified opportunity",
+    )
 
 
 # ==========================================================
-# MORNING BRIEF
+# EXECUTIVE — MORNING BRIEF
 # ==========================================================
+
 
 elif page == "Morning Brief":
 
@@ -799,8 +895,8 @@ elif page == "Morning Brief":
         "Executive Intelligence",
         "Since you were last here",
         (
-            "Only meaningful changes. No dashboard hunting, "
-            "no raw data dump."
+            "Only meaningful changes. "
+            "No dashboard hunting, no raw data dump."
         ),
     )
 
@@ -812,52 +908,84 @@ elif page == "Morning Brief":
     events = [
         (
             "Revenue",
-            "Weekend sales finished 11.2% above simulated forecast.",
+            (
+                "Weekend sales finished 11.2% "
+                "above simulated forecast."
+            ),
             "Positive",
         ),
         (
             "Inventory",
-            "9 vehicles crossed the 45-day ageing threshold.",
+            (
+                "9 vehicles crossed the "
+                "45-day ageing threshold."
+            ),
             "Review",
         ),
         (
             "Market",
-            "Brisbane SUV demand index increased 14%.",
+            (
+                "Brisbane SUV demand index "
+                "increased 14%."
+            ),
             "Opportunity",
         ),
         (
             "Operations",
-            "Melbourne recon turnaround deteriorated by 1.8 days.",
+            (
+                "Melbourne recon turnaround "
+                "deteriorated by 1.8 days."
+            ),
             "Review",
         ),
         (
             "Growth",
-            "Paid-search enquiry → test-drive conversion fell 6pp.",
+            (
+                "Paid-search enquiry → test-drive "
+                "conversion fell 6pp."
+            ),
             "Review",
         ),
         (
             "Experiment",
-            "Sydney response-time experiment reached scale confidence.",
+            (
+                "Sydney response-time experiment "
+                "reached scale confidence."
+            ),
             "Positive",
         ),
         (
             "Capital",
-            "$182K moved into critical ageing inventory.",
+            (
+                "$182K moved into critical "
+                "ageing inventory."
+            ),
             "Critical",
         ),
     ]
 
-    for category, message, state in events:
+    for (
+        category,
+        message,
+        state,
+    ) in events:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             c1, c2 = st.columns(
                 [1, 5]
             )
 
             with c1:
-                st.caption(category.upper())
+
+                st.caption(
+                    category.upper()
+                )
 
             with c2:
+
                 st.markdown(
                     f"**{message}**"
                 )
@@ -873,8 +1001,29 @@ elif page == "Morning Brief":
 
 
 # ==========================================================
-# DATA HUB
+# GROWTH ENVIRONMENT
 # ==========================================================
+
+
+elif page == "Growth Intelligence":
+
+    render_growth_intelligence()
+
+
+elif page == "Funnel Analytics":
+
+    render_funnel_analytics()
+
+
+elif page == "Market Intelligence":
+
+    render_market_intelligence()
+
+
+# ==========================================================
+# BUILDER — DATA HUB
+# ==========================================================
+
 
 elif page == "Data Hub":
 
@@ -882,15 +1031,17 @@ elif page == "Data Hub":
         "Adaptive Data Layer",
         "Bring CARS24 data. The OS adapts.",
         (
-            "Upload operational data, detect its role in the vehicle "
-            "lifecycle, map it to a canonical schema and identify "
-            "which intelligence capabilities become available."
+            "Upload operational data, detect its role in the "
+            "vehicle lifecycle, map it to a canonical schema "
+            "and identify which intelligence capabilities "
+            "become available."
         ),
     )
 
     st.info(
-        "Prototype mode: uploaded data is processed only inside the "
-        "current Streamlit session. No CARS24 production systems are connected."
+        "Prototype mode: uploaded data is processed only "
+        "inside the current Streamlit session. "
+        "No CARS24 production systems are connected."
     )
 
     upload_col, help_col = st.columns(
@@ -899,27 +1050,34 @@ elif page == "Data Hub":
 
     with upload_col:
 
-        uploaded_file = st.file_uploader(
-            "Upload operational dataset",
-            type=[
-                "csv",
-                "xlsx",
-                "xls",
-            ],
-            help=(
-                "Inventory, CRM, finance, recon, logistics, "
-                "marketing, customer or market data."
-            ),
+        uploaded_file = (
+            st.file_uploader(
+                "Upload operational dataset",
+                type=[
+                    "csv",
+                    "xlsx",
+                    "xls",
+                ],
+                help=(
+                    "Inventory, CRM, finance, recon, logistics, "
+                    "marketing, customer or market data."
+                ),
+            )
         )
 
     with help_col:
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
+
             st.markdown(
                 "**Supported operational domains**"
             )
 
-            for category in IntegrationCategory:
+            for category in (
+                IntegrationCategory
+            ):
                 st.write(
                     "• "
                     + pretty_enum(
@@ -935,38 +1093,84 @@ elif page == "Data Hub":
             "How Data Hub works"
         )
 
-        h1, h2, h3, h4 = st.columns(4)
+        h1, h2, h3, h4 = st.columns(
+            4
+        )
 
         with h1:
-            with st.container(border=True):
-                st.markdown("### 01")
-                st.markdown("**Upload**")
+
+            with st.container(
+                border=True
+            ):
+
+                st.markdown(
+                    "### 01"
+                )
+
+                st.markdown(
+                    "**Upload**"
+                )
+
                 st.caption(
-                    "Bring a CSV or spreadsheet from an operational system."
+                    "Bring a CSV or spreadsheet "
+                    "from an operational system."
                 )
 
         with h2:
-            with st.container(border=True):
-                st.markdown("### 02")
-                st.markdown("**Detect**")
+
+            with st.container(
+                border=True
+            ):
+
+                st.markdown(
+                    "### 02"
+                )
+
+                st.markdown(
+                    "**Detect**"
+                )
+
                 st.caption(
-                    "Infer whether it represents inventory, CRM, finance or another domain."
+                    "Infer whether it represents inventory, CRM, "
+                    "finance or another domain."
                 )
 
         with h3:
-            with st.container(border=True):
-                st.markdown("### 03")
-                st.markdown("**Map**")
+
+            with st.container(
+                border=True
+            ):
+
+                st.markdown(
+                    "### 03"
+                )
+
+                st.markdown(
+                    "**Map**"
+                )
+
                 st.caption(
-                    "Translate source columns into the CARS24 OS canonical model."
+                    "Translate source columns into the "
+                    "CARS24 OS canonical model."
                 )
 
         with h4:
-            with st.container(border=True):
-                st.markdown("### 04")
-                st.markdown("**Unlock**")
+
+            with st.container(
+                border=True
+            ):
+
+                st.markdown(
+                    "### 04"
+                )
+
+                st.markdown(
+                    "**Unlock**"
+                )
+
                 st.caption(
-                    "Recalculate which business intelligence becomes possible."
+                    "Recalculate which business "
+                    "intelligence becomes possible."
                 )
 
         st.divider()
@@ -975,13 +1179,23 @@ elif page == "Data Hub":
             "Current Data Coverage"
         )
 
-        for category, score in coverage.category_scores.items():
+        for (
+            category,
+            score,
+        ) in (
+            coverage
+            .category_scores
+            .items()
+        ):
 
-            name_col, bar_col, score_col = st.columns(
-                [1.4, 4, 0.7]
+            name_col, bar_col, score_col = (
+                st.columns(
+                    [1.4, 4, 0.7]
+                )
             )
 
             with name_col:
+
                 st.write(
                     pretty_enum(
                         category.value
@@ -989,11 +1203,13 @@ elif page == "Data Hub":
                 )
 
             with bar_col:
+
                 st.progress(
                     score / 100
                 )
 
             with score_col:
+
                 st.write(
                     f"{score:.0f}%"
                 )
@@ -1001,12 +1217,17 @@ elif page == "Data Hub":
     else:
 
         try:
-            dataframe = read_uploaded_dataset(
-                uploaded_file
+
+            dataframe = (
+                read_uploaded_dataset(
+                    uploaded_file
+                )
             )
 
             detection = detect_dataset(
-                list(dataframe.columns)
+                list(
+                    dataframe.columns
+                )
             )
 
             st.success(
@@ -1015,7 +1236,9 @@ elif page == "Data Hub":
                 )
             )
 
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3, c4 = st.columns(
+                4
+            )
 
             c1.metric(
                 "Rows",
@@ -1024,7 +1247,9 @@ elif page == "Data Hub":
 
             c2.metric(
                 "Source Columns",
-                len(dataframe.columns),
+                len(
+                    dataframe.columns
+                ),
             )
 
             c3.metric(
@@ -1053,17 +1278,23 @@ elif page == "Data Hub":
 
                 mapping_rows = []
 
-                for source_column in dataframe.columns:
+                for source_column in (
+                    dataframe.columns
+                ):
 
                     canonical = (
-                        detection.column_mapping.get(
+                        detection
+                        .column_mapping
+                        .get(
                             source_column
                         )
                     )
 
                     mapping_rows.append(
                         {
-                            "Source column": source_column,
+                            "Source column": (
+                                source_column
+                            ),
                             "Canonical field": (
                                 canonical
                                 if canonical
@@ -1077,8 +1308,10 @@ elif page == "Data Hub":
                         }
                     )
 
-                mapping_df = pd.DataFrame(
-                    mapping_rows
+                mapping_df = (
+                    pd.DataFrame(
+                        mapping_rows
+                    )
                 )
 
                 st.dataframe(
@@ -1093,7 +1326,9 @@ elif page == "Data Hub":
                     "Intelligence Impact"
                 )
 
-                with st.container(border=True):
+                with st.container(
+                    border=True
+                ):
 
                     st.caption(
                         "DETECTED SYSTEM"
@@ -1102,24 +1337,30 @@ elif page == "Data Hub":
                     st.markdown(
                         "### "
                         + pretty_enum(
-                            detection.category.value
+                            detection
+                            .category
+                            .value
                         )
                     )
 
                     st.write(
-                        f"Detection confidence: "
+                        "Detection confidence: "
                         f"**{detection.confidence:.0f}%**"
                     )
 
-                with st.container(border=True):
+                with st.container(
+                    border=True
+                ):
 
                     st.caption(
                         "CAPABILITIES THIS DATA SUPPORTS"
                     )
 
                     for capability in (
-                        detection.unlocked_capabilities
+                        detection
+                        .unlocked_capabilities
                     ):
+
                         st.write(
                             "✓ "
                             + capability_name(
@@ -1127,25 +1368,36 @@ elif page == "Data Hub":
                             )
                         )
 
-                with st.container(border=True):
+                with st.container(
+                    border=True
+                ):
 
                     st.caption(
                         "MISSING CANONICAL FIELDS"
                     )
 
-                    if detection.missing_fields:
+                    if (
+                        detection
+                        .missing_fields
+                    ):
 
                         for field in (
-                            detection.missing_fields
+                            detection
+                            .missing_fields
                         ):
+
                             st.write(
                                 "○ "
-                                + pretty_enum(field)
+                                + pretty_enum(
+                                    field
+                                )
                             )
 
                     else:
+
                         st.success(
-                            "Canonical schema coverage complete."
+                            "Canonical schema "
+                            "coverage complete."
                         )
 
             st.divider()
@@ -1155,7 +1407,9 @@ elif page == "Data Hub":
             )
 
             st.dataframe(
-                dataframe.head(25),
+                dataframe.head(
+                    25
+                ),
                 use_container_width=True,
             )
 
@@ -1164,19 +1418,25 @@ elif page == "Data Hub":
             )
 
             with c1:
-                import_clicked = st.button(
-                    "Import & Recalculate",
-                    type="primary",
-                    use_container_width=True,
+
+                import_clicked = (
+                    st.button(
+                        "Import & Recalculate",
+                        type="primary",
+                        use_container_width=True,
+                    )
                 )
 
             with c2:
+
                 st.caption(
-                    "In production this would persist the mapped dataset, "
-                    "update the business graph and rerun affected intelligence engines."
+                    "In production this would persist the mapped "
+                    "dataset, update the business graph and rerun "
+                    "affected intelligence engines."
                 )
 
             if import_clicked:
+
                 st.success(
                     (
                         f"{len(dataframe):,} records accepted. "
@@ -1188,30 +1448,39 @@ elif page == "Data Hub":
         except Exception as exc:
 
             st.error(
-                f"Unable to process dataset: {exc}"
+                "Unable to process dataset: "
+                f"{exc}"
             )
 
 
 # ==========================================================
-# INTEGRATIONS
+# BUILDER — INTEGRATIONS
 # ==========================================================
+
 
 elif page == "Integrations":
 
     render_page_header(
         "Connected Systems",
-        "The OS gets smarter as the data graph grows.",
         (
-            "CARS24 Intelligence OS is designed as a decision layer "
-            "above operational systems rather than a replacement for them."
+            "The OS gets smarter as "
+            "the data graph grows."
+        ),
+        (
+            "CARS24 Intelligence OS is designed as a "
+            "decision layer above operational systems "
+            "rather than a replacement for them."
         ),
     )
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3 = st.columns(
+        3
+    )
 
     active_count = sum(
         1
-        for source in integration_sources
+        for source
+        in integration_sources
         if source.status
         in {
             IntegrationStatus.CONNECTED,
@@ -1232,27 +1501,37 @@ elif page == "Integrations":
     c3.metric(
         "Capabilities unlocked",
         len(
-            coverage.unlocked_capabilities
+            coverage
+            .unlocked_capabilities
         ),
     )
 
     st.write("")
 
-    filter_option = st.selectbox(
-        "Show systems",
-        [
-            "All",
-            "Active / Simulated",
-            "Not Connected",
-        ],
+    filter_option = (
+        st.selectbox(
+            "Show systems",
+            [
+                "All",
+                "Active / Simulated",
+                "Not Connected",
+            ],
+        )
     )
 
-    visible_sources = integration_sources
+    visible_sources = (
+        integration_sources
+    )
 
-    if filter_option == "Active / Simulated":
+    if (
+        filter_option
+        == "Active / Simulated"
+    ):
+
         visible_sources = [
             source
-            for source in integration_sources
+            for source
+            in integration_sources
             if source.status
             in {
                 IntegrationStatus.CONNECTED,
@@ -1260,10 +1539,15 @@ elif page == "Integrations":
             }
         ]
 
-    elif filter_option == "Not Connected":
+    elif (
+        filter_option
+        == "Not Connected"
+    ):
+
         visible_sources = [
             source
-            for source in integration_sources
+            for source
+            in integration_sources
             if source.status
             in {
                 IntegrationStatus.READY,
@@ -1271,30 +1555,43 @@ elif page == "Integrations":
             }
         ]
 
-    for source in visible_sources:
+    for source in (
+        visible_sources
+    ):
 
-        with st.container(border=True):
+        with st.container(
+            border=True
+        ):
 
-            top1, top2, top3 = st.columns(
-                [3, 1, 1]
+            top1, top2, top3 = (
+                st.columns(
+                    [3, 1, 1]
+                )
             )
 
             with top1:
-                st.subheader(source.name)
+
+                st.subheader(
+                    source.name
+                )
 
                 st.caption(
                     pretty_enum(
-                        source.category.value
+                        source
+                        .category
+                        .value
                     )
                 )
 
             with top2:
+
                 st.metric(
                     "Coverage",
                     f"{source.coverage_pct:.0f}%",
                 )
 
             with top3:
+
                 st.caption(
                     status_text(
                         source.status
@@ -1315,22 +1612,32 @@ elif page == "Integrations":
                     "**Intelligence enabled**"
                 )
 
-                capability_cols = st.columns(
-                    min(
-                        len(
-                            source.capabilities
-                        ),
-                        4,
+                capability_cols = (
+                    st.columns(
+                        min(
+                            len(
+                                source
+                                .capabilities
+                            ),
+                            4,
+                        )
                     )
                 )
 
-                for index, capability in enumerate(
+                for (
+                    index,
+                    capability,
+                ) in enumerate(
                     source.capabilities
                 ):
+
                     with capability_cols[
                         index
-                        % len(capability_cols)
+                        % len(
+                            capability_cols
+                        )
                     ]:
+
                         st.caption(
                             "✓ "
                             + capability_name(
@@ -1338,7 +1645,10 @@ elif page == "Integrations":
                             )
                         )
 
-            if source.status == IntegrationStatus.NOT_CONNECTED:
+            if (
+                source.status
+                == IntegrationStatus.NOT_CONNECTED
+            ):
 
                 st.button(
                     "Configure connection",
@@ -1354,7 +1664,11 @@ elif page == "Integrations":
         "Capability Map"
     )
 
-    unlocked_col, locked_col = st.columns(2)
+    unlocked_col, locked_col = (
+        st.columns(
+            2
+        )
+    )
 
     with unlocked_col:
 
@@ -1362,7 +1676,11 @@ elif page == "Integrations":
             "### Available"
         )
 
-        for capability in coverage.unlocked_capabilities:
+        for capability in (
+            coverage
+            .unlocked_capabilities
+        ):
+
             st.write(
                 "✓ "
                 + capability_name(
@@ -1376,7 +1694,11 @@ elif page == "Integrations":
             "### Needs more data"
         )
 
-        for capability in coverage.locked_capabilities:
+        for capability in (
+            coverage
+            .locked_capabilities
+        ):
+
             st.write(
                 "○ "
                 + capability_name(
@@ -1386,50 +1708,50 @@ elif page == "Integrations":
 
 
 # ==========================================================
-# PLACEHOLDER ENVIRONMENTS
+# REMAINING ENVIRONMENTS
 # ==========================================================
+
 
 else:
 
     environment_copy = {
-        "Growth Intelligence": (
-            "Revenue, demand, conversion and commercial growth signals."
-        ),
-        "Funnel Analytics": (
-            "Acquisition → enquiry → test drive → offer → sale leakage."
-        ),
-        "Market Intelligence": (
-            "Regional demand, supply, pricing and acquisition opportunity."
-        ),
         "Portfolio": (
-            "Every vehicle viewed as inventory, margin and capital."
+            "Every vehicle viewed as inventory, margin "
+            "and capital."
         ),
         "Vehicle 360": (
-            "One vehicle. Full economics, demand, operational history and decisions."
+            "One vehicle. Full economics, demand, "
+            "operational history and decisions."
         ),
         "Capital Intelligence": (
             "Where capital is productive, ageing or trapped."
         ),
         "Location Performance": (
-            "Compare economics, velocity and conversion across markets."
+            "Compare economics, velocity and conversion "
+            "across Australian markets."
         ),
         "Vendor Intelligence": (
             "Recon and vendor economics beyond quoted cost."
         ),
         "Transfer Intelligence": (
-            "Match inventory to regional demand and test transfer economics."
+            "Match inventory to regional demand and test "
+            "transfer economics."
         ),
         "Action Centre": (
-            "Turn intelligence into owned decisions with evidence and impact."
+            "Turn intelligence into owned decisions "
+            "with evidence and impact."
         ),
         "Opportunity Radar": (
-            "System-detected opportunities ranked by expected economic impact."
+            "System-detected opportunities ranked by "
+            "expected economic impact."
         ),
         "Scenario Lab": (
-            "Change operating assumptions and see the economics recalculate."
+            "Change operating assumptions and watch "
+            "the business economics recalculate."
         ),
         "Experiments": (
-            "Turn hypotheses into measurable operating experiments."
+            "Turn hypotheses into measurable "
+            "operating experiments."
         ),
     }
 
@@ -1438,32 +1760,42 @@ else:
         page,
         environment_copy.get(
             page,
-            "CARS24 Australia operating intelligence.",
+            (
+                "CARS24 Australia "
+                "operating intelligence."
+            ),
         ),
     )
 
     st.info(
         "Environment shell is live. "
-        "The next build step connects this screen to the tested CARS24 engines."
+        "The next build step connects this screen "
+        "to the tested CARS24 engines."
     )
 
     st.markdown(
         """
-        ### V2 build state
+### V2 build state
 
-        **Foundation**
-        - integration-aware intelligence model ✓
-        - adaptive system registry ✓
-        - deterministic dataset detection ✓
-        - canonical schema mapping ✓
-        - 35 automated tests ✓
+**Foundation**
+- integration-aware intelligence model ✓
+- adaptive system registry ✓
+- deterministic dataset detection ✓
+- canonical schema mapping ✓
+- Growth Intelligence engine ✓
+- funnel analytics ✓
+- market opportunity detection ✓
+- 35 automated tests ✓
 
-        **Next**
-        - real analytics surfaces
-        - cross-functional intelligence
-        - decision workflows
-        - experiments
-        - scenario simulation
+**Next**
+- Inventory Intelligence
+- Vehicle 360
+- Capital Intelligence
+- vendor economics
+- transfer intelligence
+- decision workflows
+- experiments
+- scenario simulation
         """
     )
 
@@ -1472,10 +1804,13 @@ else:
 # FOOTER
 # ==========================================================
 
+
 st.write("")
 st.write("")
 
 st.caption(
-    "CARS24 AUSTRALIA INTELLIGENCE OS • Independent builder prototype • "
-    "Synthetic operating data • No confidential CARS24 systems or data."
+    "CARS24 AUSTRALIA INTELLIGENCE OS • "
+    "Independent builder prototype • "
+    "Synthetic operating data • "
+    "No confidential CARS24 systems or data."
 )
